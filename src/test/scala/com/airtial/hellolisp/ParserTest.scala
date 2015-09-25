@@ -9,9 +9,9 @@ class ParserTest {
     val code = """(foo 0 (+ 1 (bar "aoe")))"""
     val actual = Parser.parse(code)
     val expected =
-      new ExpList(List(new ExpSymbol("foo"), new ExpInt(0),
+      new ExpList(List(new ExpSymbol("foo"), Exp(0),
         new ExpList(List(
-          new ExpSymbol("+"), new ExpInt(1),
+          new ExpSymbol("+"), Exp(1),
           new ExpList(List(new ExpSymbol("bar"),
             new ExpString("aoe")))
         ))
@@ -26,13 +26,13 @@ class ParserTest {
     val expected =
       new ExpList(List(new ExpSymbol("foo"),
         new ExpList(List(new ExpSymbol("quote"),
-          new ExpList(List(new ExpInt(1), new ExpInt(2), new ExpInt(3)))
+          new ExpList(List(Exp(1), Exp(2), Exp(3)))
         )),
         new ExpList(List(new ExpSymbol("quote"),
-          new ExpList(List(new ExpInt(4), new ExpInt(5), new ExpInt(6)))
+          new ExpList(List(Exp(4), Exp(5), Exp(6)))
         )),
         new ExpList(List(new ExpSymbol("quote"),
-          new ExpList(List(new ExpInt(7), new ExpInt(8), new ExpInt(9)))
+          new ExpList(List(Exp(7), Exp(8), Exp(9)))
         ))
       ))
     Assert.assertEquals(expected, actual)
@@ -46,8 +46,8 @@ class ParserTest {
       new ExpSymbol("("),
       new ExpSymbol("("),
       new ExpSymbol("foo"),
-      new ExpInt(0),
-      new ExpInt(1),
+      new ExpNumeric(0),
+      new ExpNumeric(1),
       new ExpSymbol(")"),
       new ExpSymbol(")"))
     Assert.assertEquals(expected, actual)

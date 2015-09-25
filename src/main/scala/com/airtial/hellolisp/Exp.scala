@@ -12,23 +12,13 @@ abstract class Exp {
 
   def tail: Exp = ExpNil
 
-  def +(other: Exp): Exp = this.combine(other)(_ + _)
+  def +(other: Exp): Exp = ExpNil
 
-  def -(other: Exp): Exp = this.combine(other)(_ - _)
+  def -(other: Exp): Exp = ExpNil
 
-  def *(other: Exp): Exp = this.combine(other)(_ * _)
+  def *(other: Exp): Exp = ExpNil
 
-  def /(other: Exp): Exp = this.combine(other)(_ / _)
-
-  def combine(other: Exp)
-             (f: (ExpNumeric, ExpNumeric) => ExpNumeric): Exp = {
-    this match {
-      case exp: ExpNumeric if other.isInstanceOf[ExpNumeric] =>
-        f(exp, other.asInstanceOf[ExpNumeric])
-      case _ =>
-        throw new scala.RuntimeException("Can't calc as ExpNumeric")
-    }
-  }
+  def /(other: Exp): Exp = ExpNil
 
 }
 
@@ -36,9 +26,10 @@ object Exp {
 
   def apply(input: String): Exp = categorize(input)
 
-  def apply(i: Int): Exp = new ExpInt(i)
+  def apply(i: Int): Exp = new ExpNumeric(i.toInt)
 
-  def apply(f: Double): Exp = new ExpFloat(f)
+  def apply(f: Double): Exp =
+    new ExpNumeric(f.floor.toInt, ((f - f.floor) * ExpNumeric.DecimalDigits).toInt)
 
   def apply(list: List[Exp]): Exp = new ExpList(list)
 
@@ -49,9 +40,17 @@ object Exp {
     val RFloat = """^(-?(?:[1-9]\d*|0)\.[0-9]+)$""".r
     input match {
       case RInt(i) =>
-        new ExpInt(i)
+        new ExpNumeric(i.toInt)
       case RFloat(f) =>
-        new ExpFloat(f)
+        val ns: Array[String] = f.split('.')
+        var ni = ns(0).toInt
+        var nd =
+          (ns(1) +
+            "0" * (ExpNumeric.DecimalDigits.toString.length - ns(1).length - 1))
+            .toInt
+        ni += nd / 1000
+        nd = nd % 1000
+        new ExpNumeric(ni, nd)
       case _ =>
         new ExpSymbol(input)
     }
@@ -146,68 +145,51 @@ class ExpString(val value: String) extends Exp {
 
 }
 
-abstract class ExpNumeric extends Exp {
+class ExpNumeric(val i: Int, val d: Int) extends Exp {
 
-  def toExpInt: ExpInt
+  def this(i: Int) = this(i, 0)
 
-  def toExpFloat: ExpFloat
+  def toExpString: ExpString = new ExpString(this.toString)
 
-  def toExpString: ExpString
+  override def +(other: Exp): ExpNumeric = this.combine(other)(_ + _)
 
-  def +(other: ExpNumeric): ExpNumeric = this.combine(other)(_ + _)(_ + _)
+  override def -(other: Exp): ExpNumeric = this.combine(other)(_ - _)
 
-  def -(other: ExpNumeric): ExpNumeric = this.combine(other)(_ - _)(_ - _)
+  override def *(other: Exp): ExpNumeric = this.combine(other)(_ * _)
 
-  def *(other: ExpNumeric): ExpNumeric = this.combine(other)(_ * _)(_ * _)
+  override def /(other: Exp): ExpNumeric = this.combine(other)(_ / _)
 
-  def /(other: ExpNumeric): ExpNumeric = this.combine(other)(_ / _)(_ / _)
-
-  def combine(other: ExpNumeric)
-             (fi: (ExpInt, ExpInt) => ExpNumeric)
-             (ff: (ExpFloat, ExpFloat) => ExpNumeric): ExpNumeric = {
-    this match {
-      case e: ExpInt if other.isInstanceOf[ExpInt] =>
-        fi(e, other.asInstanceOf[ExpInt])
+  def combine(other: Exp)
+             (f: (Int, Int) => Int): ExpNumeric = {
+    other match {
+      case io: ExpNumeric =>
+        var ni = f(this.i, io.i)
+        var nd = f(this.d, io.d)
+        ni += nd / ExpNumeric.DecimalDigits
+        nd = nd % ExpNumeric.DecimalDigits
+        new ExpNumeric(ni, nd)
       case _ =>
-        ff(this.toExpFloat, other.toExpFloat)
+        throw new scala.RuntimeException(this + " can't be calculated as ExpNumeric")
     }
   }
 
-}
+  override def toString: String = {
+    if (this.d == 0) {
+      "%d".format(i)
+    } else {
+      "%d.%03d".format(i, d)
+    }
+  }
 
-class ExpInt(val value: Int) extends ExpNumeric {
-
-  def this(s: String) = this(s.toInt)
-
-  def toExpInt: ExpInt = this
-
-  def toExpFloat: ExpFloat = new ExpFloat(value.toDouble)
-
-  def toExpString: ExpString = new ExpString(value.toString)
-
-  def +(other: ExpInt): ExpInt = this.combine(other)(_ + _)
-
-  def -(other: ExpInt): ExpInt = this.combine(other)(_ - _)
-
-  def *(other: ExpInt): ExpInt = this.combine(other)(_ * _)
-
-  def /(other: ExpInt): ExpInt = this.combine(other)(_ / _)
-
-  def combine(other: ExpInt)
-             (f: (Int, Int) => Int): ExpInt =
-    new ExpInt(f(this.value, other.value))
-
-  override def toString: String = this.value.toString
-
-  override def hashCode(): Int = this.value.##
+  override def hashCode(): Int = this.i.## & this.d.## >> 3
 
   override def equals(other: Any): Boolean = {
     other match {
-      case that: ExpInt =>
+      case that: ExpNumeric =>
         if (this eq that) {
           true
         } else {
-          this.## == that.## && this.value == that.value
+          this.## == that.## && this.i == that.i && this.d == that.d
         }
       case _ => false
     }
@@ -215,42 +197,94 @@ class ExpInt(val value: Int) extends ExpNumeric {
 
 }
 
-class ExpFloat(val value: Double) extends ExpNumeric {
+object ExpNumeric {
 
-  def this(s: String) = this(s.toDouble)
-
-  def toExpInt: ExpInt = new ExpInt(this.value.toInt)
-
-  def toExpFloat: ExpFloat = this
-
-  def toExpString: ExpString = new ExpString(value.toString)
-
-  def +(other: ExpFloat): ExpFloat = this.combine(other)(_ + _)
-
-  def -(other: ExpFloat): ExpFloat = this.combine(other)(_ - _)
-
-  def *(other: ExpFloat): ExpFloat = this.combine(other)(_ * _)
-
-  def /(other: ExpFloat): ExpFloat = this.combine(other)(_ / _)
-
-  def combine(other: ExpFloat)
-             (f: (Double, Double) => Double): ExpFloat =
-    new ExpFloat(f(this.value, other.value))
-
-  override def toString: String = this.value.toString
-
-  override def hashCode(): Int = this.value.##
-
-  override def equals(other: Any): Boolean = {
-    other match {
-      case that: ExpFloat =>
-        if (this eq that) {
-          true
-        } else {
-          java.lang.Math.abs(this.value - that.value) < 0.000001
-        }
-      case _ => false
-    }
-  }
+  val DecimalDigits = 1000
 
 }
+
+//class ExpInt(val value: Int) extends ExpNumeric {
+//
+//  def this(s: String) = this(s.toInt)
+//
+//  def toExpInt: ExpInt = this
+//
+//  def toExpFloat: ExpFloat = new ExpFloat(value.toDouble)
+//
+//  def toExpString: ExpString = new ExpString(value.toString)
+//
+//  def +(other: Exp): ExpNumeric = this.combine(other)(_ + _)
+//
+//  def -(other: Exp): ExpNumeric = this.combine(other)(_ - _)
+//
+//  def *(other: Exp): ExpNumeric = this.combine(other)(_ * _)
+//
+//  def /(other: Exp): ExpNumeric = this.combine(other)(_ / _)
+//
+//  def combine(other: Exp)
+//             (f: (Int, Int) => Int): ExpInt ={
+//    other match {
+//      case io : ExpInt=>
+//        new ExpInt(f(this.value, oi.value))
+//      case fo: ExpFloat=>
+//        fo.com
+//    }
+//  }
+//
+//  override def toString: String = this.value.toString
+//
+//  override def hashCode(): Int = this.value.##
+//
+//  override def equals(other: Any): Boolean = {
+//    other match {
+//      case that: ExpInt =>
+//        if (this eq that) {
+//          true
+//        } else {
+//          this.## == that.## && this.value == that.value
+//        }
+//      case _ => false
+//    }
+//  }
+//
+//}
+//
+//class ExpFloat(val value: Double) extends ExpNumeric {
+//
+//  def this(s: String) = this(s.toDouble)
+//
+//  def toExpInt: ExpInt = new ExpInt(this.value.toInt)
+//
+//  def toExpFloat: ExpFloat = this
+//
+//  def toExpString: ExpString = new ExpString(value.toString)
+//
+//  def +(other: ExpFloat): ExpFloat = this.combine(other)(_ + _)
+//
+//  def -(other: ExpFloat): ExpFloat = this.combine(other)(_ - _)
+//
+//  def *(other: ExpFloat): ExpFloat = this.combine(other)(_ * _)
+//
+//  def /(other: ExpFloat): ExpFloat = this.combine(other)(_ / _)
+//
+//  def combine(other: ExpFloat)
+//             (f: (Double, Double) => Double): ExpFloat =
+//    new ExpFloat(f(this.value, other.value))
+//
+//  override def toString: String = this.value.toString
+//
+//  override def hashCode(): Int = this.value.##
+//
+//  override def equals(other: Any): Boolean = {
+//    other match {
+//      case that: ExpFloat =>
+//        if (this eq that) {
+//          true
+//        } else {
+//          java.lang.Math.abs(this.value - that.value) < 0.000001
+//        }
+//      case _ => false
+//    }
+//  }
+//
+//}

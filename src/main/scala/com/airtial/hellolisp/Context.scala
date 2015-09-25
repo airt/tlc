@@ -1,7 +1,5 @@
 package com.airtial.hellolisp
 
-import scala.RuntimeException
-
 class Context(var scope: Map[String, Exp]) {
   var parent: Context = null
 
@@ -20,7 +18,7 @@ class Context(var scope: Map[String, Exp]) {
     } else if (parent != null) {
       parent.get(id)
     } else {
-      throw new Exception(
+      throw new scala.RuntimeException(
         String.format("undefined symbol `%s' in %s", id, this.toString))
     }
   }
