@@ -46,6 +46,10 @@ class InterpreterTest {
 
   @Test
   def testInterpretIf(): Unit = {
+    val code1 = """(if t (+ 1 (+ 2 3)) (+ 2 3))"""
+    val actual1 = Interpreter.interpret(Parser.parse(code1))
+    val expected1 = Exp(6)
+    Assert.assertEquals(expected1, actual1)
     val code = """(if nil (+ 1 (+ 2 3)) (+ 2 3))"""
     val actual = Interpreter.interpret(Parser.parse(code))
     val expected = Exp(5)
