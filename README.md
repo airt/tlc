@@ -28,3 +28,11 @@ object Main {
 
 }
 ```
+
+### references
+
+Thank you to [Mary Rose Cook](http://maryrosecook.com/) [(Little Lisp interpreter)](https://www.recurse.com/blog/21-little-lisp-interpreter)
+
+### more
+
+[hellolisp.rb](https://github.com/airtial/hellolisp.rb) (implementation in Ruby)
