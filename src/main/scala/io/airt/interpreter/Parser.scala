@@ -1,62 +1,61 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 import scala.collection.mutable.ListBuffer
 
 object Parser {
 
   def parse(input: String): Exp = {
-    val exp: Exp = parenthesize(tokenize(input))
-    exp match {
+    parenthesize(tokenize(input)) match {
       case list: ExpList if list.values.length == 1 => list.head
-      case _ => exp
+      case exp => exp
     }
   }
 
   def tokenize(input: String): List[Exp] = {
-
-    val cs: Array[String] = input.split("\"")
+    val cs = input.split("\"")
 
     val codes: List[List[Exp]] =
-      cs.indices
-        .filter(_ % 2 == 0)
-        .map(cs(_))
-        .map(
-          _.replaceAll( """\(""", " ( ")
-            .replaceAll( """\)""", " ) ")
-            .trim
-            .split("\\s+")
-            .map(Exp.categorize)
-            .toList)
-        .toList
+      cs.indices.
+        filter(_ % 2 == 0).
+        map(cs).
+        map(
+          _.
+            replaceAll( """\(""", " ( ").
+            replaceAll( """\)""", " ) ").
+            trim.
+            split("\\s+").
+            map(Exp.categorize).
+            toList
+        ).
+        toList
 
     val strings: List[Exp] =
-      cs.indices
-        .filter(_ % 2 == 1)
-        .map(cs(_))
-        .map(new ExpString(_))
-        .toList
+      cs.
+        indices.
+        filter(_ % 2 == 1).
+        map(cs).
+        map(new ExpString(_)).
+        toList
 
     val exps: ListBuffer[Exp] =
-      codes.zip(strings) // zip => List[(List[Exp], Exp)]
-        .foldLeft(ListBuffer(): ListBuffer[Exp])(
-          (lb, le) => {
-            val (other, string) = le
-            lb ++= other
-            lb += string
-            lb
-          })
+      codes.zip(strings).foldLeft(ListBuffer[Exp]()) { (lb, le) =>
+        val (other, string) = le
+        lb ++= other
+        lb += string
+        lb
+      }
 
-    if (codes.length > strings.length)
-      exps ++= codes.last
+    if (codes.length > strings.length) exps ++= codes.last
+
     exps.+=:(Exp("("))
     exps.+=(Exp(")"))
     exps.toList
-
   }
 
   def parenthesize(input: List[Exp]): Exp = {
-    var exps: List[Exp] = input
+    var exps = input
     val values: ListBuffer[Exp] = ListBuffer()
+
     while (true) {
       if (exps.isEmpty) {
         return if (values.length == 1) {

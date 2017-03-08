@@ -1,20 +1,20 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 class Context(var scope: Map[String, Exp]) {
-  var parent: Context = null
+  var parent: Context = _
 
   def this(scope: Map[String, Exp], parent: Context) {
     this(scope)
     this.parent = parent
   }
 
-  def birth() = {
+  def birth: Context = {
     new Context(Map(), this)
   }
 
   def get(id: String): Exp = {
     if (this.scope.contains(id)) {
-      scope.get(id).get
+      scope(id)
     } else if (parent != null) {
       parent.get(id)
     } else {
@@ -29,7 +29,8 @@ class Context(var scope: Map[String, Exp]) {
         ef
       case _ =>
         throw new scala.RuntimeException(
-          String.format("undefined function `%s' in %s", id, this))
+          String.format("undefined function `%s' in %s", id, this)
+        )
     }
   }
 
@@ -39,7 +40,7 @@ class Context(var scope: Map[String, Exp]) {
   }
 
   override def toString: String = {
-    if (this == Context.library) "Library" else scope.toString()
+    if (this == Context.library) "Library" else scope.toString
   }
 
 }

@@ -1,4 +1,4 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 abstract class Exp {
 
@@ -59,7 +59,7 @@ object ExpNil extends Exp {
 
 class ExpFunction(val call: (List[Exp]) => Exp) extends Exp {
 
-  def apply(list: List[Exp]) = call(list)
+  def apply(list: List[Exp]): Exp = call(list)
 
   override def toString: String = call.toString()
 
@@ -87,8 +87,8 @@ class ExpList(val values: List[Exp]) extends Exp {
         } else {
           this.## == that.## &&
             this.values.length == that.values.length &&
-            this.values.indices
-              .forall(index => this.values(index) == that.values(index))
+            this.values.indices.
+              forall(index => this.values(index) == that.values(index))
         }
       case _ => false
     }
@@ -151,7 +151,7 @@ class ExpNumeric(val value: BigDecimal) extends Exp {
   override def /(other: Exp): ExpNumeric = this.combine(other)(_ / _)
 
   def combine(other: Exp)
-             (f: (BigDecimal, BigDecimal) => BigDecimal): ExpNumeric = {
+    (f: (BigDecimal, BigDecimal) => BigDecimal): ExpNumeric = {
     other match {
       case on: ExpNumeric =>
         new ExpNumeric(f(this.value, on.value))

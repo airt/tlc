@@ -1,4 +1,4 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 object Interpreter {
 
@@ -16,7 +16,7 @@ object Interpreter {
     input.head match {
       case ih: ExpSymbol =>
         if (Special.contains(ih.value)) {
-          Special.get(ih.value).get.apply(input, context)
+          Special(ih.value).apply(input, context)
         } else {
           val func: ExpFunction = context.getAsExpFunction(ih.value)
           val args: List[Exp] = input.tail.values.map(interpret(_, context))
@@ -43,13 +43,13 @@ object Interpreter {
   val Special: Map[String, (ExpList, Context) => Exp] = Map(
     ("let", (input, context) => {
       interpret(input(2),
-        input(1)
-          .asInstanceOf[ExpList].values
-          .foldLeft(context.birth())((c, e) => {
-          c.put(e.asInstanceOf[ExpList].values
-            .head.asInstanceOf[ExpSymbol].value,
-            interpret(e.asInstanceOf[ExpList].values(1), context))
-        })
+        input(1).
+          asInstanceOf[ExpList].values.
+          foldLeft(context.birth) { (c, e) =>
+            c.put(e.asInstanceOf[ExpList].values
+              .head.asInstanceOf[ExpSymbol].value,
+              interpret(e.asInstanceOf[ExpList].values(1), context))
+          }
       )
     }),
     ("lambda", (input, context) => {
@@ -58,20 +58,20 @@ object Interpreter {
           input(1)
             .asInstanceOf[ExpList].values
             .zip(args)
-            .foldLeft(context.birth())((c, e) => {
-            c.put(e._1.asInstanceOf[ExpSymbol].value,
-              e._2)
-          })
+            .foldLeft(context.birth)((c, e) => {
+              c.put(e._1.asInstanceOf[ExpSymbol].value,
+                e._2)
+            })
         )
       })
     }),
     ("defun", (input, context) => {
       context.put(input(1).asInstanceOf[ExpSymbol].value,
-        Special.get("lambda").get
+        Special("lambda")
           .apply(input.tail, context))
       ExpNil
     }),
-    ("quote", (input, context) => {
+    ("quote", (input, _) => {
       input.values(1)
     }),
     ("if", (input, context) => {

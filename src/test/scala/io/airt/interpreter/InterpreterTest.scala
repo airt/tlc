@@ -1,4 +1,4 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 import org.junit.{Assert, Test}
 

@@ -1,14 +1,14 @@
-package com.airtial.hellolisp
+package io.airt.interpreter
 
 import org.junit.{Assert, Test}
 
-class ReplTest {
+class EvalTest {
 
   @Test
   def testEval(): Unit = {
     val code = """((defun foo (x) (+ x 1))
                    ((lambda (x) (* x (foo x))) 2))"""
-    val actual = Hellolisp.eval(code)
+    val actual = TLI.eval(code)
     val expected = Exp(6)
     Assert.assertEquals(expected, actual)
   }
@@ -16,7 +16,7 @@ class ReplTest {
   @Test
   def testEvalFromFile(): Unit = {
     val filepath = """src/test/resources/hl.l"""
-    Hellolisp.main(Array(filepath))
+    TLI.main(Array(filepath))
   }
 
 }
