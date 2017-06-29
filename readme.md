@@ -1,33 +1,37 @@
 # the-little-interpreter
 
-a mini lisp interpreter in scala
+[![Build Status][build-badge]][build-status]
+
+a mini lisp interpreter
 
 ## support
 
-`let` `lambda` `defun` `quote` `if`
+### ops
+
+`quote` `if` `let` `lambda` `def`
 
 ## usage
 
 ```bash
 mvn package
 cd target
-scala the-little-interpreter-0.0.1.jar coo.l
+scala the-little-interpreter-*.jar coo.l
 ```
 
 or
 
 ```scala
-import io.airt.interpreter._
+import wheels.airt.interpreter._
 
-object Main {
+object App {
 
   def main(args: Array[String]) {
     val code = """
       ((lambda (func x) (func x (+ x 1)))
-         (lambda (x y) (+ x y))
-         512)
+        (lambda (x y) (+ x y))
+        512)
     """
-    println(TLI.eval(code))
+    println(Main.eval(code))
   }
 
 }
@@ -40,3 +44,6 @@ Thank you to [Mary Rose Cook](http://maryrosecook.com/) [(Little Lisp Interprete
 ## license
 
 MIT
+
+[build-badge]: https://img.shields.io/travis/airt/the-little-interpreter.svg
+[build-status]: https://travis-ci.org/airt/the-little-interpreter

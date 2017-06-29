@@ -1,6 +1,6 @@
-package io.airt.interpreter
+package wheels.airt.interpreter
 
-object TLI {
+object Main {
 
   def main(args: Array[String]) {
 
@@ -21,8 +21,6 @@ object TLI {
 
   }
 
-  def eval(input: String): Exp = {
-    Interpreter.interpret(Parser.parse(input))
-  }
+  lazy val eval: String => Expr = AstInterpreter.interpret compose Parser.parse
 
 }
