@@ -1,0 +1,34 @@
+name: tlc
+version: 0.0.1
+synopsis: ..
+maintainer: airt <airtial@gmail.com>
+license: MIT
+github: airt/tlc
+
+dependencies:
+  - base
+  - containers
+  - haskeline
+  - mtl
+  - optparse-applicative
+  - parsec
+  - text
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Language
+
+executable:
+  main: Main.hs
+  source-dirs: app
+  dependencies:
+    - tlc
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+      - tlc
+      - hspec
