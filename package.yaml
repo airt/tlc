@@ -18,6 +18,9 @@ library:
   source-dirs: src
   exposed-modules:
     - Language
+    - Language.Entry
+    - Language.Parser
+    - Language.Syntax
 
 executable:
   main: Main.hs
