@@ -12,6 +12,7 @@ dependencies:
   - mtl
   - optparse-applicative
   - parsec
+  - pretty
   - text
 
 library:
@@ -20,6 +21,7 @@ library:
     - Language
     - Language.Entry
     - Language.Parser
+    - Language.Pretty
     - Language.Syntax
 
 executable:

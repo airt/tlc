@@ -9,11 +9,14 @@ import Control.Monad.IO.Class
 import Data.Text
 import System.Console.Haskeline
 import Language.Parser
+import Language.Pretty
 
 process :: Text -> IO ()
 process = parses [] >>> \case
   Left e -> print e
-  Right x -> print x
+  Right x -> do
+    pprint x
+    print x
 
 loop :: InputT IO ()
 loop = getInputLine "> " >>= \case
